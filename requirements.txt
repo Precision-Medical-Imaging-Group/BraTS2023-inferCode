@@ -1,0 +1,4 @@
+tqdm
+nnunetv2==2.1
+nibabel==5.1.0
+connected_components_3d==3.12.1

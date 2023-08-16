@@ -18,10 +18,12 @@ def maybe_make_dir(path):
     os.makedirs(path, exist_ok=True)
     return path
 
-def ped_ensembler(nnunet_et_npz_path, nnunet_tcwt_npz_path, swinunter_npz_path):
+def ped_ensembler(nnunet_et_npz_path_list, nnunet_tcwt_npz_path_list, swinunter_npz_path):
+    assert len(nnunet_et_npz_path_list) == 5
+    assert len(nnunet_tcwt_npz_path_list) == 5
     ## ensemble code here
     ensembled = 
-    return ensembled_path #niftiimage
+    return ensembled_path # return a nifti np.unint8
 
 
 def infer_single(input_path, out_dir):
@@ -29,12 +31,12 @@ def infer_single(input_path, out_dir):
         temp_dir = Path(tmpdirname)
         print(f'storing artifacts in tmp dir {temp_dir}')
         
-        nnunet_et_npz_path = run_infer_nnunet(input_path, maybe_make_dir(temp_dir/ 'et'), CONSTANTS['et_nnunet_model_path'])
-        nnunet_tcwt_npz_path = run_infer_nnunet(input_path, maybe_make_dir(temp_dir/ 'tcwt'), CONSTANTS['tcwt_nnunet_model_path'])
+        nnunet_et_npz_path_list:list = run_infer_nnunet(input_path, maybe_make_dir(temp_dir/ 'et'), CONSTANTS['et_nnunet_model_path'])
+        nnunet_tcwt_npz_path_list:list = run_infer_nnunet(input_path, maybe_make_dir(temp_dir/ 'tcwt'), CONSTANTS['tcwt_nnunet_model_path'])
         swinunter_npz_path = run_infer_swinunter(input_path, maybe_make_dir(temp_dir/ 'swin'), CONSTANTS['swinunter_model_path'])
 
         ensemble_folder =  maybe_make_dir(temp_dir/ 'ensemble')
-        ensembled_pred_nii_path = ped_ensembler(nnunet_et_npz_path, nnunet_tcwt_npz_path, swinunter_npz_path, ensemble_folder)
+        ensembled_pred_nii_path = ped_ensembler(nnunet_et_npz_path_list, nnunet_tcwt_npz_path_list, swinunter_npz_path, ensemble_folder)
 
         label_to_optimize= 'et'
         pp_et_out = maybe_make_dir(temp_dir/ 'pp{label_to_optimize}')
