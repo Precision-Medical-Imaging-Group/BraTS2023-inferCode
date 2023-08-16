@@ -59,6 +59,7 @@ def run_infer_nnunet(input_folder: str, output_folder: str, challenge_name: str,
     
     # Commands
     for fold in tqdm(folds):
+        output_folder_fold = os.path.join(output_folder,f"fold_{fold}")
         print(f"Running nnU-Net inference for fold {fold}")
         cmd = f"{env_set} nnUNetv2_predict -i {input_folder} -o {output_folder} -d {dataset_name} -c {configuration_name} -tr {trainer_name} -f {fold}"
         if(save_npz):
@@ -67,6 +68,7 @@ def run_infer_nnunet(input_folder: str, output_folder: str, challenge_name: str,
 
     # get the final npz(single file)
     # TODO: can you please return a list of npz_path
+    # rejecting folder creation in favour of returning path. Might be better cleaning up
     # TODO: we dont care about separate folders as long as you return the list as below
     # remember try not to generate more file than the 5 unless you really have to 
     npz_path_list = [npz_path_0, npz_path_1, npz_path_2, npz_path_3, npz_path_4]
