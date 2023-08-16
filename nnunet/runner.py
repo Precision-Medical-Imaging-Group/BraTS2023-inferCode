@@ -1,5 +1,6 @@
 import subprocess
 from tqdm import tqdm
+import os
 
 def get_dataset_name(challenge_name: str):
     '''
@@ -47,8 +48,9 @@ def run_infer_nnunet(input_folder: str, output_folder: str, challenge_name: str,
     
     # Commands
     for fold in tqdm(folds):
+        output_folder_fold = os.path.join(output_folder,f"fold_{fold}")
         print(f"Running nnU-Net inference for fold {fold}")
-        cmd = f"nnUNetv2_predict -i {input_folder} -o {output_folder} -d {dataset_name} -c {configuration_name} -tr {trainer_name} -f {fold}"
+        cmd = f"nnUNetv2_predict -i {input_folder} -o {output_folder_fold} -d {dataset_name} -c {configuration_name} -tr {trainer_name} -f {fold}"
         if(save_npz):
             cmd+=" --save_probabilities"
         subprocess.run(cmd, shell=True)  # Executes the command in the shell
