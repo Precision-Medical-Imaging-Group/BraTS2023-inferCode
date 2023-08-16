@@ -1,6 +1,6 @@
 
 
-def run_infer_swinunter(input_path, output_folder, model_folder_pth):
+def run_infer_swinunetr(input_path, output_folder, model_folder_pth):
     """runner that helps run swinunter based on a model path and 
     returns path to the probability npz
 

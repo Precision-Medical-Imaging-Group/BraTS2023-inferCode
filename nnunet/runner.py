@@ -1,16 +1,56 @@
+import subprocess
+from tqdm import tqdm
 
 
-def run_infer_nnunet(input_path, output_folder, model_folder_pth):
-    """runner that helps run nnunet based on a model path and 
-    returns path to the probability npz
+def get_dataset_name(challenge_name: str):
+    '''
+    Returns the corresponding dataset name based on the provided challenge name.
 
-    Args:
-        input_path (path): path to the folder containing the 4 input files 
-        output_path (path): path to folder to store teh npz file
-        model_folder_pth (path): path where model weights are stored
+    Parameters:
+    challenge_name (str): Name of the challenge.
 
     Returns:
-        path: path to the npz file
-    """
+    str: Corresponding dataset name.
     
-    return path_npz
+    Raises:
+    Exception: If the challenge name is not compatible.
+    '''
+    
+    if(challenge_name=="BraTS2023_MEN"):
+        dataset_name = "Dataset004_BraTS2023_MEN"
+    elif(challenge_name=="BraTS2023_MET"):
+        dataset_name = "Dataset005_BraTS2023_MET"
+    elif(challenge_name=="BraTS2023_PED"):
+        dataset_name = "Dataset006_BraTS2023_PED"
+    else:
+        raise Exception("Challenge name not compatible.")
+    
+    return dataset_name
+    
+
+def run_infer_nnunet(input_folder: str, output_folder: str, challenge_name: str, folds=[0,1,2,3,4], save_npz=True):
+    '''
+    Runs nnU-Net inference for a given set of parameters.
+
+    Parameters:
+    input_folder (str): Input folder containing NIfTI files to be predicted.
+    output_folder (str): Output folder where predictions will be saved.
+    challenge_name (str): Name of the challenge.
+    folds (list, optional): List of folds for which to run inference. Defaults to [0,1,2,3,4].
+    save_npz (bool, optional): Whether to save prediction probabilities as npz files (apart from NIfTI). Defaults to True.
+    '''
+    
+    # Check challenge name and get dataset name
+    dataset_name = get_dataset_name(challenge_name)
+    
+    # Variables
+    trainer_name = "nnUNetTrainer_100epochs"
+    configuration_name = "3d_fullres"
+    
+    # Commands
+    for fold in tqdm(folds):
+        print(f"Running nnU-Net inference for fold {fold}")
+        cmd = f"nnUNetv2_predict -i {input_folder} -o {output_folder} -d {dataset_name} -c {configuration_name} -tr {trainer_name} -f {fold}"
+        if(save_npz):
+            cmd+=" --save_probabilities"
+        subprocess.run(cmd, shell=True)  # Executes the command in the shell
