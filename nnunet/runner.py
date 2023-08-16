@@ -1,7 +1,6 @@
 import subprocess
 from tqdm import tqdm
 
-
 def get_dataset_name(challenge_name: str):
     '''
     Returns the corresponding dataset name based on the provided challenge name.
@@ -26,7 +25,6 @@ def get_dataset_name(challenge_name: str):
         raise Exception("Challenge name not compatible.")
     
     return dataset_name
-    
 
 def run_infer_nnunet(input_folder: str, output_folder: str, challenge_name: str, folds=[0,1,2,3,4], save_npz=True):
     '''
