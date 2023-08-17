@@ -1,16 +1,17 @@
 import subprocess
 from tqdm import tqdm
 import os
+from nnunet.install_model import install_nnunet_model_from_zip
 
 def maybe_make_dir(path):
     os.makedirs(path, exist_ok=True)
     return path
 
-def set_env_paths(path):
-    raw_path = maybe_make_dir(path / 'nnUNet_raw')
-    preprocessed = maybe_make_dir(path / 'nnUNet_preprocessed')
-    results =  maybe_make_dir(path / 'nnUNet_results')
-    return f"nnUNet_raw='{raw_path}' nnUNet_preprocessed='{preprocessed}' nnUNet_results='{results}'"
+def set_env_paths(input_path, path):
+    #raw_path = maybe_make_dir(path / 'nnUNet_raw')
+    preprocessed = maybe_make_dir(input_path / 'nnUNet_preprocessed')
+    #results =  maybe_make_dir(path / 'nnUNet_results')
+    return f"nnUNet_raw='{input_path}' nnUNet_preprocessed='{preprocessed}' nnUNet_results='./'"
 
 def get_dataset_name(challenge_name: str):
     '''
@@ -32,44 +33,44 @@ def get_dataset_name(challenge_name: str):
         dataset_name = "Dataset005_BraTS2023_MET"
     elif(challenge_name=="BraTS2023_PED"):
         dataset_name = "Dataset006_BraTS2023_PED"
+    elif(challenge_name=="BraTS2023_PED_ET"):
+        dataset_name = "Dataset008_BraTS2023_PED_ONLY_ET"
     else:
         raise Exception("Challenge name not compatible.")
     
     return dataset_name
 
-def run_infer_nnunet(input_folder: str, output_folder: str, challenge_name: str, folds=[0,1,2,3,4], save_npz=True)->list:
-    '''
-    Runs nnU-Net inference for a given set of parameters.
+def run_infer_nnunet(input_folder: str, output_folder: str,  challenge_name: str, name,  folds=[0,1,2,3,4], save_npz=True)->list:
+    """_summary_
 
-    Parameters:
-    input_folder (str): Input folder containing NIfTI files to be predicted.
-    output_folder (str): Output folder where predictions will be saved.
-    challenge_name (str): Name of the challenge.
-    folds (list, optional): List of folds for which to run inference. Defaults to [0,1,2,3,4].
-    save_npz (bool, optional): Whether to save prediction probabilities as npz files (apart from NIfTI). Defaults to True.
-    '''
+    Args:
+        input_folder (str): input folder
+        output_folder (str): folder where output is to be stored
+        challenge_name (str): task name for which inference is done
+        name (str): file name
+        folds (list, optional): describe which folds to run. Defaults to [0,1,2,3,4].
+        save_npz (bool, optional): whether to save the probabilities. Defaults to True.
+
+    Returns:
+        list: a list of the npz files from each fold
+    """
     
     # Check challenge name and get dataset name
     dataset_name = get_dataset_name(challenge_name)
-    env_set = set_env_paths(output_folder)
-    
+    env_set = set_env_paths(input_folder, output_folder)
+
     # Variables
     trainer_name = "nnUNetTrainer_100epochs"
     configuration_name = "3d_fullres"
-    
-    # Commands
+
+    npz_path_list = []
     for fold in tqdm(folds):
         output_folder_fold = os.path.join(output_folder,f"fold_{fold}")
         print(f"Running nnU-Net inference for fold {fold}")
-        cmd = f"{env_set} nnUNetv2_predict -i {input_folder} -o {output_folder} -d {dataset_name} -c {configuration_name} -tr {trainer_name} -f {fold}"
+        cmd = f"{env_set} nnUNetv2_predict -i '{input_folder}' -o '{output_folder_fold}' -d '{dataset_name}' -c '{configuration_name}' -tr '{trainer_name}' -f '{fold}'"
         if(save_npz):
             cmd+=" --save_probabilities"
         subprocess.run(cmd, shell=True)  # Executes the command in the shell
-
-    # get the final npz(single file)
-    # TODO: can you please return a list of npz_path
-    # rejecting folder creation in favour of returning path. Might be better cleaning up
-    # TODO: we dont care about separate folders as long as you return the list as below
-    # remember try not to generate more file than the 5 unless you really have to 
-    npz_path_list = [npz_path_0, npz_path_1, npz_path_2, npz_path_3, npz_path_4]
+        npz_path_list.append(os.path.join(output_folder_fold, name+'.nii.gz'))
+    
     return npz_path_list
