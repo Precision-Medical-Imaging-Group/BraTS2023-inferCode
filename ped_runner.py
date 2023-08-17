@@ -51,10 +51,13 @@ def infer_single(input_path, out_dir):
 
         nnunet_et_npz_path_list = run_infer_nnunet(input_folder_raw/ name, maybe_make_dir(temp_dir/ 'et'), 'BraTS2023_PED_ET', name)
         nnunet_tcwt_npz_path_list = run_infer_nnunet(input_folder_raw/ name, maybe_make_dir(temp_dir/ 'tcwt'), 'BraTS2023_PED', name)
-        swinunter_npz_path_list = run_infer_swinunter(input_folder_raw/ name, maybe_make_dir(temp_dir/ 'swin'), CONSTANTS['swinunter_model_path'])
+        print(nnunet_et_npz_path_list)
+        print(nnunet_tcwt_npz_path_list)
+        print('it works untill here...')
+        # swinunter_npz_path_list = run_infer_swinunter(input_folder_raw/ name, maybe_make_dir(temp_dir/ 'swin'), CONSTANTS['swinunter_model_path'])
 
-        ensemble_folder =  maybe_make_dir(temp_dir/ 'ensemble')
-        ensembled_pred_nii_path = ped_ensembler(nnunet_et_npz_path_list, nnunet_tcwt_npz_path_list, swinunter_npz_path_list, ensemble_folder)
+        # ensemble_folder =  maybe_make_dir(temp_dir/ 'ensemble')
+        # ensembled_pred_nii_path = ped_ensembler(nnunet_et_npz_path_list, nnunet_tcwt_npz_path_list, swinunter_npz_path_list, ensemble_folder)
 
         # label_to_optimize= 'et'
         # pp_et_out = maybe_make_dir(temp_dir/ 'pp{label_to_optimize}')
