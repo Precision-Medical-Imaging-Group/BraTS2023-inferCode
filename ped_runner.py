@@ -3,6 +3,9 @@ import os
 import shutil
 from pathlib import Path
 from nnunet.install_model import install_model_from_zip
+import numpy as np
+import nibabel as nib
+
 from nnunet.runner import run_infer_nnunet
 from swinunetr.runner import run_infer_swinunetr
 from postproc.postprocess import remove_dir, postprocess_batch
@@ -26,13 +29,59 @@ def maybe_make_dir(path):
     os.makedirs(path, exist_ok=True)
     return path
 
-def ped_ensembler(nnunet_et_npz_path_list, nnunet_tcwt_npz_path_list, swinunter_npz_path_list, ensembled_path):
-    assert len(nnunet_et_npz_path_list) == 5
-    assert len(nnunet_tcwt_npz_path_list) == 5
-    assert len(swinunter_npz_path_list) == 5
-    ## ensemble code here
-    #ensembled = 
-    return ensembled_path # return a nifti np.unint8
+def ped_ensembler(nnunet_et_npz_path_list, nnunet_tcwt_npz_path_list, swinunter_npz_path_list, ensembled_path, input_img):
+
+    if not ensembled_path.exists():
+        ensembled_path.mkdir(parents=True)
+    
+    # ensemble SwinUNETR first
+    case = swinunter_npz_path_list[0].name.split('.npz')[0]
+    print(f"Ensemble {case}")
+    prob = np.load(swinunter_npz_path_list[0])['probabilities']
+    for i in range(1, 5):
+        prob += np.load(swinunter_npz_path_list[i])['probabilities']
+    prob_swin = prob / 5
+    print(f"Probabilities SwinUNETR: {prob_swin.shape}")
+    
+    # ensemble nnunet
+    prob = np.load(nnunet_et_npz_path_list[0], allow_pickle=True)['probabilities']
+    for i in range(1, 5):
+        prob += np.load(nnunet_et_npz_path_list[i], allow_pickle=True)['probabilities']
+    prob /= 5
+    prob_et = prob[1]
+    prob_et = np.swapaxes(prob_et, 0, 2)
+    print(f"Probabilities nnunet ET: {prob_et.shape}")
+
+    prob_tcwt = np.load(nnunet_tcwt_npz_path_list[0])['probabilities']
+    for i in range(1, 5):
+        prob_tcwt += np.load(nnunet_tcwt_npz_path_list[1])['probabilities']
+    prob_tcwt /= 5 
+    prob_tc = prob_tcwt[1]
+    prob_tc = np.swapaxes(prob_tc, 0, 2)
+    print(f"Probabilities nnunet TC: {prob_tc.shape}")
+    prob_wt = prob_tcwt[0]
+    prob_wt = np.swapaxes(prob_wt, 0, 2)
+    print(f"Probabilities nnunet WT: {prob_wt.shape}")
+        
+    prob_wt = (prob_wt + prob_swin[1]) * 0.5
+    prob_tc = (prob_tc + prob_swin[0]) * 0.5
+    prob_et = (prob_et + prob_swin[2]) * 0.5
+    prob_out = np.zeros_like(prob_swin)
+    prob_out[0] = prob_tc
+    prob_out[1] = prob_wt
+    prob_out[2] = prob_et
+    # np.savez(output_prob / f"{case}.npz", probabilities=prob_out)
+
+    # save seg
+    seg = (prob_out > 0.5).astype(np.int8)
+    seg_out = np.zeros_like(seg[0])
+    seg_out[seg[1] == 1] = 2
+    seg_out[seg[0] == 1] = 1
+    seg_out[seg[2] == 1] = 3
+    print(f"Seg: {seg.shape}")
+    img = nib.load(input_img)
+    nib.save(nib.Nifti1Image(seg_out.astype(np.int8), img.affine), ensembled_path / f"{case}.nii.gz")
+    return ensembled_path / f"{case}.nii.gz"
 
 
 def infer_single(input_path, out_dir):
@@ -45,24 +94,22 @@ def infer_single(input_path, out_dir):
     with tempfile.TemporaryDirectory() as tmpdirname:
         temp_dir = Path(tmpdirname)
         print(f'storing artifacts in tmp dir {temp_dir}')
-        # input_folder_raw = maybe_make_dir(temp_dir/ 'inp')
-        # name = input_path.split('/')[-1]
-        # shutil.copytree(input_path, input_folder_raw / name)
-        # # only for the test
-        # os.remove(input_folder_raw / name/ f'{name}-seg.nii.gz')
-        # for key, val in NAME_MAPPER.items():
-        #     os.rename(input_folder_raw / name/ f'{name}{key}', input_folder_raw / name/ f'{name}{val}')
+        input_folder_raw = maybe_make_dir(temp_dir/ 'inp')
+        name = input_path.name
+        print(name)
+        shutil.copytree(input_path, input_folder_raw / name)
+        # only for the test
+        #os.remove(input_folder_raw / name/ f'{name}-seg.nii.gz')
+        for key, val in NAME_MAPPER.items():
+            os.rename(input_folder_raw / name/ f'{name}{key}', input_folder_raw / name/ f'{name}{val}')
+            one_image = input_folder_raw / name/ f'{name}{val}'
         
-        # nnunet_et_npz_path_list = run_infer_nnunet(input_folder_raw/ name, maybe_make_dir(temp_dir/ 'et'), 'BraTS2023_PED_ET', name)
-        # nnunet_tcwt_npz_path_list = run_infer_nnunet(input_folder_raw/ name, maybe_make_dir(temp_dir/ 'tcwt'), 'BraTS2023_PED', name)
-        # print(nnunet_et_npz_path_list)
-        # print(nnunet_tcwt_npz_path_list)
-        # print('it works untill here...')
+        nnunet_et_npz_path_list = run_infer_nnunet(input_folder_raw/ name, maybe_make_dir(temp_dir/ 'et'), 'BraTS2023_PED_ET', name)
+        nnunet_tcwt_npz_path_list = run_infer_nnunet(input_folder_raw/ name, maybe_make_dir(temp_dir/ 'tcwt'), 'BraTS2023_PED', name)
         swinunter_npz_path_list = run_infer_swinunetr(Path(input_path), maybe_make_dir(temp_dir/ 'swin'), 'ped', Path(CONSTANTS['swinunter_pt_path']))
-        print(swinunter_npz_path_list)
-        import pdb; pdb.set_trace()
-        # ensemble_folder =  maybe_make_dir(temp_dir/ 'ensemble')
-        # ensembled_pred_nii_path = ped_ensembler(nnunet_et_npz_path_list, nnunet_tcwt_npz_path_list, swinunter_npz_path_list, ensemble_folder)
+        
+        ensemble_folder =  maybe_make_dir(temp_dir/ 'ensemble')
+        ensembled_pred_nii_path = ped_ensembler(nnunet_et_npz_path_list, nnunet_tcwt_npz_path_list, swinunter_npz_path_list, ensemble_folder, one_image)
 
         # label_to_optimize= 'et'
         # pp_et_out = maybe_make_dir(temp_dir/ 'pp{label_to_optimize}')
@@ -74,10 +121,36 @@ def infer_single(input_path, out_dir):
         
         # remove_dir(pp_ed_out, maybe_make_dir(out_dir), CONSTANTS['remove_dir_factor'])
 
+        
+        nii_folder = remove_dir(ensemble_folder, maybe_make_dir(temp_dir/ 'pp'), 50)
+        label_to_optimize= 'et'
+        pp_et_out = maybe_make_dir(temp_dir/ 'pp{label_to_optimize}')
+        postprocess_batch(nii_folder, pp_et_out, label_to_optimize, ratio=CONSTANTS[f'{label_to_optimize}_ratio'], convert_to_brats_labels=False)
+        
+        label_to_optimize= 'ed'
+        #pp_ed_out = maybe_make_dir(temp_dir/ 'pp{label_to_optimize}')
+        postprocess_batch(pp_et_out, out_dir, label_to_optimize, ratio=CONSTANTS[f'{label_to_optimize}_ratio'], convert_to_brats_labels=False)
+
+
+def setup_model_weights():
+    install_model_from_zip(CONSTANTS['et_nnunet_model_path'])
+    install_model_from_zip(CONSTANTS['tcwt_nnunet_model_path'])
+    install_model_from_zip(CONSTANTS['swinunter_model_path'])
+
+def batch_processor(input_folder, output_folder):
+    for input_path in Path(input_folder).iterdir():
+        infer_single(input_path, output_folder)
+
 
 if __name__ == "__main__":
-    #install_model_from_zip(CONSTANTS['et_nnunet_model_path'])
-    #install_model_from_zip(CONSTANTS['tcwt_nnunet_model_path'])
-    install_model_from_zip(CONSTANTS['swinunter_model_path'])
-    input_path = '/media/abhijeet/Seagate Portable Drive1/Brats23/BRATS Pediatric Dataset/ASNR-MICCAI-BraTS2023-PED-Challenge-TrainingData/BraTS-PED-00002-000'
-    infer_single(input_path, './')
+    setup_model_weights()
+    import time
+
+    start_time = time.time()
+    input_path = '/media/abhijeet/Seagate Portable Drive1/Brats23/BRATS Pediatric Dataset/ASNR-MICCAI-BraTS2023-PED-Challenge-ValidationData/'
+    for input_path in Path(input_path).iterdir():
+        infer_single(input_path, './output_for_comp/')
+    end_time = time.time()
+    elapsed_time = end_time - start_time
+    print(f"Time taken: {(elapsed_time/60):.1f} minutes")
+    print(f"Time taken per sample: {(elapsed_time/60/45):.1f} minutes")

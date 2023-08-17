@@ -182,3 +182,5 @@ def remove_dir(input_dir, output_dir, thresh):
                   f"ED {ed:03d}/{n_ed:03d} ET {et:03d}/{n_et:03d}")
         else:
             print("Wrong input file!")
+
+    return output_dir

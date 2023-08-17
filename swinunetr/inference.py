@@ -69,8 +69,9 @@ def get_loader(args):
     Load data sets for training, validation and testing from json files
     """
     data_root = Path(args.data_dir)
-    img_paths = [f for f in data_root.iterdir() if f.name.endswith('.nii.gz')]
-    img_paths = [f for f in img_paths if 'seg' not in str(f)]
+    channel_order= ['-t1n.nii.gz', '-t1c.nii.gz','-t2w.nii.gz','-t2f.nii.gz']
+    img_paths = [f"{data_root.name}{c}" for c in channel_order]
+
     # val_data = json_data['validation']
     val_data = [{'image': img_paths}]
     # add data root to json file lists 

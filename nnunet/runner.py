@@ -70,6 +70,6 @@ def run_infer_nnunet(input_folder: str, output_folder: str,  challenge_name: str
         if(save_npz):
             cmd+=" --save_probabilities"
         subprocess.run(cmd, shell=True)  # Executes the command in the shell
-        npz_path_list.append(os.path.join(output_folder_fold, name+'.nii.gz'))
+        npz_path_list.append(os.path.join(output_folder_fold, name+'.npz'))
     
     return npz_path_list
