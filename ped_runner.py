@@ -4,7 +4,7 @@ import shutil
 from pathlib import Path
 from nnunet.install_model import install_nnunet_model_from_zip
 from nnunet.runner import run_infer_nnunet
-from swinunetr.runner import run_infer_swinunter
+from swinunetr.runner import run_infer_swinunetr
 from postproc.postprocess import remove_dir, postprocess_batch
 
 CONSTANTS={
@@ -44,10 +44,10 @@ def infer_single(input_path, out_dir):
         shutil.copytree(input_path, input_folder_raw / name)
         # only for the test
         os.remove(input_folder_raw / name/ f'{name}-seg.nii.gz')
-        os.rename(input_folder_raw / name/ f'{name}-t1c.nii.gz', input_folder_raw / name/ f'{name}_0000.nii.gz')
-        os.rename(input_folder_raw / name/ f'{name}-t1n.nii.gz', input_folder_raw / name/ f'{name}_0001.nii.gz')
-        os.rename(input_folder_raw / name/ f'{name}-t2f.nii.gz', input_folder_raw / name/ f'{name}_0002.nii.gz')
-        os.rename(input_folder_raw / name/ f'{name}-t2w.nii.gz', input_folder_raw / name/ f'{name}_0003.nii.gz')
+        os.rename(input_folder_raw / name/ f'{name}-t1n.nii.gz', input_folder_raw / name/ f'{name}_0000.nii.gz')
+        os.rename(input_folder_raw / name/ f'{name}-t1c.nii.gz', input_folder_raw / name/ f'{name}_0001.nii.gz')
+        os.rename(input_folder_raw / name/ f'{name}-t2w.nii.gz', input_folder_raw / name/ f'{name}_0002.nii.gz')
+        os.rename(input_folder_raw / name/ f'{name}-t2f.nii.gz', input_folder_raw / name/ f'{name}_0003.nii.gz')
 
         nnunet_et_npz_path_list = run_infer_nnunet(input_folder_raw/ name, maybe_make_dir(temp_dir/ 'et'), 'BraTS2023_PED_ET', name)
         nnunet_tcwt_npz_path_list = run_infer_nnunet(input_folder_raw/ name, maybe_make_dir(temp_dir/ 'tcwt'), 'BraTS2023_PED', name)
@@ -73,5 +73,5 @@ def infer_single(input_path, out_dir):
 if __name__ == "__main__":
     install_nnunet_model_from_zip(CONSTANTS['et_nnunet_model_path'])
     install_nnunet_model_from_zip(CONSTANTS['tcwt_nnunet_model_path'])
-    input_path = '/media/abhijeet/Seagate Portable Drive1/Brats23/BRATS Pediatric Dataset/ASNR-MICCAI-BraTS2023-PED-Challenge-TrainingData/BraTS-PED-00002-000'
+    input_path = 'path_to_data/ASNR-MICCAI-BraTS2023-PED-Challenge-TrainingData/BraTS-PED-00002-000'
     infer_single(input_path, './')
