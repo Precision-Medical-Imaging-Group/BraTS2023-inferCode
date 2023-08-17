@@ -36,7 +36,7 @@ parser.add_argument('--cacherate', default=1.0, type=float, help='cache data rat
 parser.add_argument('--workers', default=0, type=int, help='number of workers')
 parser.add_argument('--batch_size', default=1, type=int, help='number of batch size')
 parser.add_argument('--use_checkpoint', action='store_true', help='use gradient checkpointing to save memory')
-parser.add_argument('--pretrained_dir', default='./pretrained', type=str, help='pretrained checkpoint directory')
+parser.add_argument('--pretrained_model_path', default='./pretrained', type=str, help='pretrained checkpoint directory')
 parser.add_argument('--pred_label', action='store_true', help='predict labels or regions')
 
 
@@ -70,6 +70,7 @@ def get_loader(args):
     """
     data_root = Path(args.data_dir)
     img_paths = [f for f in data_root.iterdir() if f.name.endswith('.nii.gz')]
+    img_paths = [f for f in img_paths if 'seg' not in str(f)]
     # val_data = json_data['validation']
     val_data = [{'image': img_paths}]
     # add data root to json file lists 
@@ -113,9 +114,7 @@ def main():
         output_directory.mkdir(parents=True)
 
     val_loader = get_loader(args)    
-    pretrained_dir = args.pretrained_dir
-    model_name = args.pretrained_model_name
-    pretrained_pth = Path(pretrained_dir) / model_name
+    pretrained_pth = Path(args.pretrained_model_path)
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = SwinUNETR(
@@ -129,7 +128,7 @@ def main():
         use_checkpoint=args.use_checkpoint
     )
 
-    model_dict = torch.load(pretrained_pth, map_location=device)['model']
+    model_dict = torch.load(pretrained_pth, map_location=device)
     model.load_state_dict(model_dict)
     model.eval()
     model.to(device)
@@ -159,17 +158,17 @@ def main():
             # print(f"Probmap shape: {prob_np.shape}")
             np.savez(output_directory / f"{img_name}.npz", probabilities=prob_np)
             
-            if args.pred_label:
-                seg_out = np.argmax(prob_np, axis=0)
-            else:
-                seg = (prob_np > 0.5).astype(np.int8)
-                seg_out = np.zeros_like(seg[0])
-                seg_out[seg[1] == 1] = 2
-                seg_out[seg[0] == 1] = 1
-                seg_out[seg[2] == 1] = 3
+            # if args.pred_label:
+            #     seg_out = np.argmax(prob_np, axis=0)
+            # else:
+            #     seg = (prob_np > 0.5).astype(np.int8)
+            #     seg_out = np.zeros_like(seg[0])
+            #     seg_out[seg[1] == 1] = 2
+            #     seg_out[seg[0] == 1] = 1
+            #     seg_out[seg[2] == 1] = 3
             
-            nib.save(nib.Nifti1Image(seg_out.astype(np.int8), affine),
-                    output_directory / f"{img_name}.nii.gz")
+            # nib.save(nib.Nifti1Image(seg_out.astype(np.int8), affine),
+            #         output_directory / f"{img_name}.nii.gz")
                 
             # print(f"Seg shape: {seg_out.shape}")
                  

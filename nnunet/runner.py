@@ -1,7 +1,6 @@
 import subprocess
 from tqdm import tqdm
 import os
-from nnunet.install_model import install_nnunet_model_from_zip
 
 def maybe_make_dir(path):
     os.makedirs(path, exist_ok=True)

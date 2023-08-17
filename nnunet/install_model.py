@@ -1,4 +1,5 @@
 import subprocess
+import zipfile
 
 def check_path(path: str):
     '''
@@ -13,7 +14,7 @@ def check_path(path: str):
     
     assert path.endswith(".zip"), "Path must point to a ZIP file"
 
-def install_nnunet_model_from_zip(path: str):
+def install_model_from_zip(path: str):
     '''
     Installs a pretrained nnU-Net (v2) model from a zipped file.
 
@@ -22,5 +23,8 @@ def install_nnunet_model_from_zip(path: str):
     '''
 
     check_path(path)
-    cmd = f"nnUNetv2_install_pretrained_model_from_zip {path}"
-    subprocess.run(cmd, shell=True)  # Executes the command in the shell
+    
+    with zipfile.ZipFile(path, 'r') as zip_ref:
+        zip_ref.extractall('./')
+    # cmd = f"nnUNetv2_install_pretrained_model_from_zip {path}"
+    # subprocess.run(cmd, shell=True)  # Executes the command in the shell
