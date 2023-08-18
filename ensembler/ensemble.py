@@ -20,6 +20,7 @@ def ped_ensembler(nnunet_et_npz_path_list, nnunet_tcwt_npz_path_list, swinunter_
     for i in range(1, len(nnunet_et_npz_path_list)):
         prob += np.load(nnunet_et_npz_path_list[i], allow_pickle=True)['probabilities']
     prob /= len(nnunet_et_npz_path_list)
+    
     prob_et = prob[1]
     prob_et = np.swapaxes(prob_et, 0, 2)
     print(f"Probabilities nnunet ET: {prob_et.shape}")
@@ -28,6 +29,7 @@ def ped_ensembler(nnunet_et_npz_path_list, nnunet_tcwt_npz_path_list, swinunter_
     for i in range(1, len(nnunet_tcwt_npz_path_list)):
         prob_tcwt += np.load(nnunet_tcwt_npz_path_list[1])['probabilities']
     prob_tcwt /= len(nnunet_tcwt_npz_path_list)
+    
     prob_tc = prob_tcwt[1]
     prob_tc = np.swapaxes(prob_tc, 0, 2)
     print(f"Probabilities nnunet TC: {prob_tc.shape}")
