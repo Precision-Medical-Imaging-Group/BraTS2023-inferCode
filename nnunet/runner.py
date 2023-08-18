@@ -77,10 +77,10 @@ def run_infer_nnunet(input_folder: str, output_folder: str,  challenge_name: str
 
     if ensemble:
         output_folder_fold = os.path.join(output_folder,"ens")
-        print(f"Running nnUnet Ensemble..")
-        cmd = f"{env_set} nnUNetv2_ensemble -i {' '.join(all_folds)} -o '{output_folder_fold}'"
+        print(f"Running nnUnet inference with all folds (ensemble)..")
+        cmd = f"{env_set} nnUNetv2_predict -i '{input_folder}' -o '{output_folder_fold}' -d '{dataset_name}' -c '{configuration_name}' -tr '{trainer_name}'"
         if(save_npz):
-            cmd+=" --save_npz"
+            cmd+=" --save_probabilities"
         subprocess.run(cmd, shell=True)
 
         return [os.path.join(output_folder_fold, name+'.npz')]

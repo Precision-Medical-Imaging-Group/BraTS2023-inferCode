@@ -18,11 +18,11 @@ NAME_MAPPER ={
 CONSTANTS={
     'et_nnunet_model_path':'./weights/BraTS2023_PED_ONLY_ET_nnunetv2_model.zip',
     'tcwt_nnunet_model_path':'./weights/BraTS2023_PED_nnunetv2_model.zip',
-    'swinunter_model_path':'./weights/BraTS2023-Swin-Weights.zip',
-    'swinunter_pt_path':'./BraTS2023-Swin-Weights',
+    'swinunetr_model_path':'./weights/BraTS2023-Swin-Weights.zip',
+    'swinunetr_pt_path':'./BraTS2023-Swin-Weights',
     'et_ratio': 0.04,
-    'ed_ratio':1.0,
-    'remove_dir_factor':130,
+    'ed_ratio': 1.0,
+    'remove_dir_factor': 130,
 }
 
 def maybe_make_dir(path):
@@ -49,12 +49,12 @@ def infer_single(input_path, out_dir):
             os.rename(input_folder_raw / name/ f'{name}{key}', input_folder_raw / name/ f'{name}{val}')
             one_image = input_folder_raw / name/ f'{name}{val}'
         
-        nnunet_et_npz_path_list = run_infer_nnunet(input_folder_raw/ name, maybe_make_dir(temp_dir/ 'et'), 'BraTS2023_PED_ET', name)
-        nnunet_tcwt_npz_path_list = run_infer_nnunet(input_folder_raw/ name, maybe_make_dir(temp_dir/ 'tcwt'), 'BraTS2023_PED', name)
-        swinunter_npz_path_list = run_infer_swinunetr(Path(input_path), maybe_make_dir(temp_dir/ 'swin'), 'ped', Path(CONSTANTS['swinunter_pt_path']))
+        nnunet_et_npz_path_list = run_infer_nnunet(input_folder_raw/ name, maybe_make_dir(temp_dir / 'et'), 'BraTS2023_PED_ET', name)
+        nnunet_tcwt_npz_path_list = run_infer_nnunet(input_folder_raw/ name, maybe_make_dir(temp_dir / 'tcwt'), 'BraTS2023_PED', name)
+        swinunetr_npz_path_list = run_infer_swinunetr(Path(input_path), maybe_make_dir(temp_dir / 'swin'), 'ped', Path(CONSTANTS['swinunetr_pt_path']))
         
         #ensemble_folder =  maybe_make_dir(temp_dir/ 'ensemble')
-        ensembled_pred_nii_path = ped_ensembler(nnunet_et_npz_path_list, nnunet_tcwt_npz_path_list, swinunter_npz_path_list, Path(out_dir), one_image)
+        ensembled_pred_nii_path = ped_ensembler(nnunet_et_npz_path_list, nnunet_tcwt_npz_path_list, swinunetr_npz_path_list, Path(out_dir), one_image)
 
         # label_to_optimize= 'et'
         # pp_et_out = maybe_make_dir(temp_dir/ 'pp{label_to_optimize}')
@@ -80,7 +80,7 @@ def infer_single(input_path, out_dir):
 def setup_model_weights():
     install_model_from_zip(CONSTANTS['et_nnunet_model_path'])
     install_model_from_zip(CONSTANTS['tcwt_nnunet_model_path'])
-    install_model_from_zip(CONSTANTS['swinunter_model_path'])
+    install_model_from_zip(CONSTANTS['swinunetr_model_path'])
 
 def batch_processor(input_folder, output_folder):
     for input_path in Path(input_folder).iterdir():
@@ -92,7 +92,7 @@ if __name__ == "__main__":
     import time
 
     start_time = time.time()
-    input_path = '/media/abhijeet/Seagate Portable Drive1/Brats23/BRATS Pediatric Dataset/ASNR-MICCAI-BraTS2023-PED-Challenge-ValidationData/'
+    input_path = 'path_to_data/ASNR-MICCAI-BraTS2023-PED-Challenge-ValidationData/'
     for input_path in Path(input_path).iterdir():
         infer_single(input_path, './output_for_comp/')
     end_time = time.time()
