@@ -2,6 +2,7 @@ import tempfile
 import os
 import shutil
 from pathlib import Path
+import time
 
 from nnunet.install_model import install_model_from_zip
 from ensembler.ensemble import ped_ensembler
@@ -53,29 +54,17 @@ def infer_single(input_path, out_dir):
         nnunet_tcwt_npz_path_list = run_infer_nnunet(input_folder_raw/ name, maybe_make_dir(temp_dir/ 'tcwt'), 'BraTS2023_PED', name)
         swinunter_npz_path_list = run_infer_swinunetr(Path(input_path), maybe_make_dir(temp_dir/ 'swin'), 'ped', Path(CONSTANTS['swinunter_pt_path']))
         
-        #ensemble_folder =  maybe_make_dir(temp_dir/ 'ensemble')
-        ensembled_pred_nii_path = ped_ensembler(nnunet_et_npz_path_list, nnunet_tcwt_npz_path_list, swinunter_npz_path_list, Path(out_dir), one_image)
+        ensemble_folder =  maybe_make_dir(temp_dir/ 'ensemble')
+        ensembled_pred_nii_path = ped_ensembler(nnunet_et_npz_path_list, nnunet_tcwt_npz_path_list, swinunter_npz_path_list, ensemble_folder, one_image)
 
-        # label_to_optimize= 'et'
-        # pp_et_out = maybe_make_dir(temp_dir/ 'pp{label_to_optimize}')
-        # postprocess_batch(ensemble_folder, pp_et_out, label_to_optimize, ratio=CONSTANTS[f'{label_to_optimize}_ratio'], convert_to_brats_labels=False)
+        label_to_optimize= 'et'
+        pp_et_out = maybe_make_dir(temp_dir/ 'pp{label_to_optimize}')
+        postprocess_batch(ensemble_folder, pp_et_out, label_to_optimize, ratio=CONSTANTS[f'{label_to_optimize}_ratio'], convert_to_brats_labels=False)
         
-        # label_to_optimize= 'ed'
-        # pp_ed_out = maybe_make_dir(temp_dir/ 'pp{label_to_optimize}')
-        # postprocess_batch(pp_et_out, pp_ed_out, label_to_optimize, ratio=CONSTANTS[f'{label_to_optimize}_ratio'], convert_to_brats_labels=False)
-        
-        # remove_dir(pp_ed_out, maybe_make_dir(out_dir), CONSTANTS['remove_dir_factor'])
-
-        # remove 50 here on
-        # nii_folder = remove_dir(ensemble_folder, maybe_make_dir(temp_dir/ 'pp'), 50)
-        # label_to_optimize= 'et'
-        # pp_et_out = maybe_make_dir(temp_dir/ 'pp{label_to_optimize}')
-        # postprocess_batch(nii_folder, pp_et_out, label_to_optimize, ratio=CONSTANTS[f'{label_to_optimize}_ratio'], convert_to_brats_labels=False)
-        
-        # label_to_optimize= 'ed'
-        # #pp_ed_out = maybe_make_dir(temp_dir/ 'pp{label_to_optimize}')
-        # postprocess_batch(pp_et_out, out_dir, label_to_optimize, ratio=CONSTANTS[f'{label_to_optimize}_ratio'], convert_to_brats_labels=False)
-
+        label_to_optimize= 'ed'
+        pp_ed_out = maybe_make_dir(temp_dir/ 'pp{label_to_optimize}')
+        postprocess_batch(pp_et_out,  pp_ed_out, label_to_optimize, ratio=CONSTANTS[f'{label_to_optimize}_ratio'], convert_to_brats_labels=False)
+        remove_dir(pp_ed_out, maybe_make_dir(out_dir), CONSTANTS['remove_dir_factor'])
 
 def setup_model_weights():
     install_model_from_zip(CONSTANTS['et_nnunet_model_path'])
@@ -89,12 +78,10 @@ def batch_processor(input_folder, output_folder):
 
 if __name__ == "__main__":
     setup_model_weights()
-    import time
-
     start_time = time.time()
     input_path = '/media/abhijeet/Seagate Portable Drive1/Brats23/BRATS Pediatric Dataset/ASNR-MICCAI-BraTS2023-PED-Challenge-ValidationData/'
-    for input_path in Path(input_path).iterdir():
-        infer_single(input_path, './output_for_comp/')
+    output_folder = './output_for_comp/'
+    batch_processor(input_path, output_folder)
     end_time = time.time()
     elapsed_time = end_time - start_time
     print(f"Time taken: {(elapsed_time/60):.1f} minutes")

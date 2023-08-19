@@ -62,27 +62,24 @@ def run_infer_nnunet(input_folder: str, output_folder: str,  challenge_name: str
     trainer_name = "nnUNetTrainer_100epochs"
     configuration_name = "3d_fullres"
 
-    npz_path_list = []
-    all_folds = []
- 
-    for fold in tqdm(folds):
-        output_folder_fold = os.path.join(output_folder, f"fold_{fold}")
-        all_folds.append(output_folder_fold)
-        print(f"Running nnU-Net inference for fold {fold}")
-        cmd = f"{env_set} nnUNetv2_predict -i '{input_folder}' -o '{output_folder_fold}' -d '{dataset_name}' -c '{configuration_name}' -tr '{trainer_name}' -f '{fold}'"
-        if(save_npz):
-            cmd+=" --save_probabilities"
-        subprocess.run(cmd, shell=True)  # Executes the command in the shell
-        npz_path_list.append(os.path.join(output_folder_fold, name+'.npz'))
-
     if ensemble:
         output_folder_fold = os.path.join(output_folder,"ens")
-        print(f"Running nnUnet Ensemble..")
-        cmd = f"{env_set} nnUNetv2_ensemble -i {' '.join(all_folds)} -o '{output_folder_fold}'"
+        print(f"Running nnUnet inference with all folds (ensemble)..")
+        cmd = f"{env_set} nnUNetv2_predict -i '{input_folder}' -o '{output_folder_fold}' -d '{dataset_name}' -c '{configuration_name}' -tr '{trainer_name}'"
         if(save_npz):
-            cmd+=" --save_npz"
+            cmd+=" --save_probabilities"
         subprocess.run(cmd, shell=True)
 
         return [os.path.join(output_folder_fold, name+'.npz')]
+    else:
+        npz_path_list = [] 
+        for fold in tqdm(folds):
+            output_folder_fold = os.path.join(output_folder, f"fold_{fold}")
+            print(f"Running nnU-Net inference for fold {fold}")
+            cmd = f"{env_set} nnUNetv2_predict -i '{input_folder}' -o '{output_folder_fold}' -d '{dataset_name}' -c '{configuration_name}' -tr '{trainer_name}' -f '{fold}'"
+            if(save_npz):
+                cmd+=" --save_probabilities"
+            subprocess.run(cmd, shell=True)  # Executes the command in the shell
+            npz_path_list.append(os.path.join(output_folder_fold, name+'.npz'))
 
-    return npz_path_list
+        return npz_path_list

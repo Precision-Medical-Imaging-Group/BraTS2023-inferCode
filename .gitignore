@@ -2,6 +2,6 @@
 medperf
 test_mlcubes
 **__pycache__**
-weights
+*.zip
 Dataset006_BraTS2023_PED
 Dataset008_BraTS2023_PED_ONLY_ET

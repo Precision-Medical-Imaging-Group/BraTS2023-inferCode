@@ -11,3 +11,5 @@ source activate .mlcubes/bin/activate
 ```bash
 sh install_medperf.sh
 ```
+All weights
+https://cnmc-my.sharepoint.com/:f:/g/personal/pabhijeet_childrensnational_org/EmMNukOtj3REgw5EM4AWjnABX_IPNtO2myg6LSdtAmUySw?e=ngSyMl
