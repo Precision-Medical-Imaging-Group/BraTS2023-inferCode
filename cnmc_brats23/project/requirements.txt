@@ -4,3 +4,7 @@ monai==1.2.0
 einops==0.6.1
 nibabel==5.1.0
 connected_components_3d==3.12.1
+charset-normalizer==3.2.0 
+requests==2.31.0 
+urllib3==2.0.4
+schema==0.7.5
