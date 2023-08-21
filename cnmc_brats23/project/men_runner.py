@@ -15,7 +15,7 @@ CONSTANTS={
     'nnunet_model_path':'./weights/BraTS2023_MEN_nnunetv2_model.zip',
     'swinunetr_model_path':'./weights/BraTS2023-MEN-Model-Swin.zip',
     'swinunetr_pt_path':'./BraTS2023-MEN-Model-Swin',
-    'remove_disconnected_factor': 50,
+    'remove_disconnected_factor': 110,
 }
 
 def infer_single(input_path, out_dir):
