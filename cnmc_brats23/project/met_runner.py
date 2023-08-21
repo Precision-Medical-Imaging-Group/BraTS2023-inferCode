@@ -14,9 +14,7 @@ from ped_runner import NAME_MAPPER, maybe_make_dir
 
 CONSTANTS={
     'nnunet_model_path':'./weights/BraTS2023_MET_nnunetv2_model.zip',
-    'swinunetr_model_path':'./weights/BraTS2023-MET-Model-Swin.zip',
-    'swinunetr_pt_path':'./BraTS2023-MET-Model-Swin',
-    'remove_disconnected_factor': 10,
+    'remove_disconnected_factor': 15,
 }
 
 def infer_single(input_path, out_dir):
@@ -49,7 +47,6 @@ def infer_single(input_path, out_dir):
 
 def setup_model_weights():
     install_model_from_zip(CONSTANTS['nnunet_model_path'])
-    install_model_from_zip(CONSTANTS['swinunetr_model_path'])
 
 def batch_processor(input_folder, output_folder):
     for input_path in Path(input_folder).iterdir():
@@ -59,7 +56,7 @@ def batch_processor(input_folder, output_folder):
 if __name__ == "__main__":
     setup_model_weights()
     start_time = time.time()
-    input_path = '/media/abhijeet/Seagate Portable Drive1/Brats23/BRATS Pediatric Dataset/ASNR-MICCAI-BraTS2023-MET-Challenge-ValidationData/'
+    input_path = '/media/abhijeet/Seagate Portable Drive1/Brats23/ASNR-MICCAI-BraTS2023-MET-Challenge-ValidationData'
     output_folder = './output_for_comp/'
     batch_processor(input_path, output_folder)
     end_time = time.time()
