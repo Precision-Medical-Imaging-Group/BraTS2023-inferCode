@@ -5,10 +5,10 @@ from pathlib import Path
 import time
 
 from nnunet.install_model import install_model_from_zip
-from ensembler.ensemble import ped_ensembler
+from ensembler.ensemble import men_met_ensembler
 from nnunet.runner import run_infer_nnunet
 from swinunetr.runner import run_infer_swinunetr
-from postproc.postprocess import remove_disconnected_from_dir, postprocess_batch
+from postproc.postprocess import remove_disconnected_from_dir
 
 NAME_MAPPER ={
     '-t1n.nii.gz': '_0000.nii.gz',
@@ -17,18 +17,15 @@ NAME_MAPPER ={
     '-t2f.nii.gz': '_0003.nii.gz'
 }
 CONSTANTS={
-    'et_nnunet_model_path':'./weights/BraTS2023_PED_ONLY_ET_nnunetv2_model.zip',
-    'tcwt_nnunet_model_path':'./weights/BraTS2023_PED_nnunetv2_model.zip',
-    'swinunetr_model_path':'./weights/BraTS2023-PED-Model_Swin.zip',
-    'swinunetr_pt_path':'./BraTS2023-PED-Model_Swin',
-    'et_ratio': 0.04,
-    'ed_ratio': 1.0,
-    'remove_disconnected_factor': 130,
+    'nnunet_model_path':'./weights/BraTS2023_MEN_nnunetv2_model.zip',
+    'swinunetr_model_path':'./weights/BraTS2023-MEN-Model-Swin.zip',
+    'swinunetr_pt_path':'./BraTS2023-MEN-Model-Swin',
+    'remove_disconnected_factor': 110,
 }
 
 def maybe_make_dir(path):
     os.makedirs(path, exist_ok=True)
-    return Path(path)
+    return path
 
 def infer_single(input_path, out_dir):
     """do inference on a single folder
@@ -50,26 +47,16 @@ def infer_single(input_path, out_dir):
             os.rename(input_folder_raw / name/ f'{name}{key}', input_folder_raw / name/ f'{name}{val}')
             one_image = input_folder_raw / name/ f'{name}{val}'
         
-        nnunet_et_npz_path_list = run_infer_nnunet(input_folder_raw/ name, maybe_make_dir(temp_dir/ 'et'), 'BraTS2023_PED_ET', name)
-        nnunet_tcwt_npz_path_list = run_infer_nnunet(input_folder_raw/ name, maybe_make_dir(temp_dir/ 'tcwt'), 'BraTS2023_PED', name)
-        swinunetr_npz_path_list = run_infer_swinunetr(Path(input_path), maybe_make_dir(temp_dir/ 'swin'), 'ped', Path(CONSTANTS['swinunetr_pt_path']))
+        nnunet_npz_path_list = run_infer_nnunet(input_folder_raw/ name, maybe_make_dir(temp_dir/ 'nnunet'), 'BraTS2023_MEN', name)
+        swinunetr_npz_path_list = run_infer_swinunetr(Path(input_path), maybe_make_dir(temp_dir/ 'swin'), 'men', Path(CONSTANTS['swinunetr_pt_path']))
         
         ensemble_folder =  maybe_make_dir(temp_dir/ 'ensemble')
-        ensembled_pred_nii_path = ped_ensembler(nnunet_et_npz_path_list, nnunet_tcwt_npz_path_list, swinunetr_npz_path_list, ensemble_folder, one_image)
+        ensembled_pred_nii_path = men_met_ensembler(nnunet_npz_path_list, swinunetr_npz_path_list, ensemble_folder, one_image)
 
-        label_to_optimize= 'et'
-        pp_et_out = maybe_make_dir(temp_dir/ 'pp{label_to_optimize}')
-        postprocess_batch(ensemble_folder, pp_et_out, label_to_optimize, ratio=CONSTANTS[f'{label_to_optimize}_ratio'], convert_to_brats_labels=False)
-        
-        label_to_optimize= 'ed'
-        pp_ed_out = maybe_make_dir(temp_dir/ 'pp{label_to_optimize}')
-        postprocess_batch(pp_et_out,  pp_ed_out, label_to_optimize, ratio=CONSTANTS[f'{label_to_optimize}_ratio'], convert_to_brats_labels=False)
-        
-        remove_disconnected_from_dir(pp_ed_out, maybe_make_dir(out_dir), CONSTANTS['remove_disconnected_factor'])
+        remove_disconnected_from_dir(ensemble_folder, maybe_make_dir(out_dir), CONSTANTS['remove_disconnected_factor'])
 
 def setup_model_weights():
-    install_model_from_zip(CONSTANTS['et_nnunet_model_path'])
-    install_model_from_zip(CONSTANTS['tcwt_nnunet_model_path'])
+    install_model_from_zip(CONSTANTS['nnunet_model_path'])
     install_model_from_zip(CONSTANTS['swinunetr_model_path'])
 
 def batch_processor(input_folder, output_folder):
@@ -80,7 +67,7 @@ def batch_processor(input_folder, output_folder):
 if __name__ == "__main__":
     setup_model_weights()
     start_time = time.time()
-    input_path = '/media/abhijeet/Seagate Portable Drive1/Brats23/BRATS Pediatric Dataset/ASNR-MICCAI-BraTS2023-PED-Challenge-ValidationData/'
+    input_path = '/media/abhijeet/Seagate Portable Drive1/Brats23/BRATS Pediatric Dataset/ASNR-MICCAI-BraTS2023-MEN-Challenge-ValidationData/'
     output_folder = './output_for_comp/'
     batch_processor(input_path, output_folder)
     end_time = time.time()

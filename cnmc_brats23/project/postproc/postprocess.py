@@ -1,4 +1,3 @@
-
 import numpy as np
 import nibabel as nib
 import cc3d
@@ -169,7 +168,7 @@ def remove_disconnected(seg_file, out_file, thresh=50):
     return removed_ncr, n_ncr, removed_ed, n_ed, removed_et, n_et
 
 
-def remove_dir(input_dir, output_dir, thresh):
+def remove_disconnected_from_dir(input_dir, output_dir, thresh):
     if not output_dir.exists():
         output_dir.mkdir(parents=True)
 

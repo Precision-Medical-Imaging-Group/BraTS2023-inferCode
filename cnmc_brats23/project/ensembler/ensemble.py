@@ -1,17 +1,17 @@
 import numpy as np
 import nibabel as nib
 
-def ped_ensembler(nnunet_et_npz_path_list, nnunet_tcwt_npz_path_list, swinunter_npz_path_list, ensembled_path, input_img):
+def ped_ensembler(nnunet_et_npz_path_list, nnunet_tcwt_npz_path_list, swinunetr_npz_path_list, ensembled_path, input_img):
 
     if not ensembled_path.exists():
         ensembled_path.mkdir(parents=True)
     
     # ensemble SwinUNETR first
-    case = swinunter_npz_path_list[0].name.split('.npz')[0]
+    case = swinunetr_npz_path_list[0].name.split('.npz')[0]
     print(f"Ensemble {case}")
-    prob = np.load(swinunter_npz_path_list[0])['probabilities']
+    prob = np.load(swinunetr_npz_path_list[0])['probabilities']
     for i in range(1, 5):
-        prob += np.load(swinunter_npz_path_list[i])['probabilities']
+        prob += np.load(swinunetr_npz_path_list[i])['probabilities']
     prob_swin = prob / 5
     print(f"Probabilities SwinUNETR: {prob_swin.shape}")
     
@@ -49,6 +49,43 @@ def ped_ensembler(nnunet_et_npz_path_list, nnunet_tcwt_npz_path_list, swinunter_
     seg_out = np.zeros_like(seg[0])
     seg_out[seg[1] == 1] = 2
     seg_out[seg[0] == 1] = 1
+    seg_out[seg[2] == 1] = 3
+    print(f"Seg: {seg.shape}")
+    img = nib.load(input_img)
+    nib.save(nib.Nifti1Image(seg_out.astype(np.int8), img.affine), ensembled_path / f"{case}.nii.gz")
+    return ensembled_path / f"{case}.nii.gz"
+
+def men_met_ensembler(nnunet_npz_path_list, swinunetr_npz_path_list, ensembled_path, input_img):
+
+    if not ensembled_path.exists():
+        ensembled_path.mkdir(parents=True)
+    
+    # ensemble SwinUNETR first
+    case = swinunetr_npz_path_list[0].name.split('.npz')[0]
+    print(f"Ensemble {case}")
+    prob = np.load(swinunetr_npz_path_list[0])['probabilities']
+    for i in range(1, 5):
+        prob += np.load(swinunetr_npz_path_list[i])['probabilities']
+    prob_swin = prob / 5
+    print(f"Probabilities SwinUNETR: {prob_swin.shape}")
+    
+    # ensemble nnunet
+    prob = np.load(nnunet_npz_path_list[0], allow_pickle=True)['probabilities']
+    for i in range(1, len(nnunet_npz_path_list)):
+        prob += np.load(nnunet_npz_path_list[i], allow_pickle=True)['probabilities']
+    prob /= len(nnunet_npz_path_list)
+    prob_nnunet = prob[1]
+    prob_nnunet = np.swapaxes(prob_nnunet, 0, 2)
+    print(f"Probabilities nnunet: {prob_nnunet.shape}")
+    
+    prob_out = (prob_nnunet + prob_swin) * 0.5
+    # np.savez(output_prob / f"{case}.npz", probabilities=prob_out)
+
+    # save seg
+    seg = (prob_out > 0.5).astype(np.int8)
+    seg_out = np.zeros_like(seg[0])
+    seg_out[seg[0] == 1] = 1
+    seg_out[seg[1] == 1] = 2
     seg_out[seg[2] == 1] = 3
     print(f"Seg: {seg.shape}")
     img = nib.load(input_img)

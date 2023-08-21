@@ -3,7 +3,7 @@ from pathlib import Path
 
 
 def run_infer_swinunetr(input_path: Path, output_folder: Path, challenge, model_folder_pth: Path, folds=[0,1,2,3,4])->list:
-    """runner that helps run swinunter based on a model path and 
+    """runner that helps run swinunetr based on a model path and 
     returns path to the probability npz
 
     Args:
