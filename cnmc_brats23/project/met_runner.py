@@ -5,7 +5,7 @@ from pathlib import Path
 import time
 
 from nnunet.install_model import install_model_from_zip
-from ensembler.ensemble import men_met_ensembler
+from ensembler.ensemble import met_ensembler
 from nnunet.runner import run_infer_nnunet
 from swinunetr.runner import run_infer_swinunetr
 from postproc.postprocess import remove_disconnected_from_dir
@@ -20,7 +20,7 @@ CONSTANTS={
     'nnunet_model_path':'./weights/BraTS2023_MET_nnunetv2_model.zip',
     'swinunetr_model_path':'./weights/BraTS2023-MET-Model-Swin.zip',
     'swinunetr_pt_path':'./BraTS2023-MET-Model-Swin',
-    'remove_disconnected_factor': 15,
+    'remove_disconnected_factor': 10,
 }
 
 def maybe_make_dir(path):
@@ -47,11 +47,11 @@ def infer_single(input_path, out_dir):
             os.rename(input_folder_raw / name/ f'{name}{key}', input_folder_raw / name/ f'{name}{val}')
             one_image = input_folder_raw / name/ f'{name}{val}'
         
-        nnunet_npz_path_list = run_infer_nnunet(input_folder_raw/ name, maybe_make_dir(temp_dir/ 'nnunet'), 'BraTS2023_MET', name)
-        swinunetr_npz_path_list = run_infer_swinunetr(Path(input_path), maybe_make_dir(temp_dir/ 'swin'), 'met', Path(CONSTANTS['swinunetr_pt_path']))
+        nnunet_npz_path_list = run_infer_nnunet(input_folder_raw/ name, maybe_make_dir(temp_dir/ 'nnunet'), 'BraTS2023_MET', name, ensemble=False)
+        # swinunetr_npz_path_list = run_infer_swinunetr(Path(input_path), maybe_make_dir(temp_dir/ 'swin'), 'met', Path(CONSTANTS['swinunetr_pt_path']))
         
         ensemble_folder =  maybe_make_dir(temp_dir/ 'ensemble')
-        ensembled_pred_nii_path = men_met_ensembler(nnunet_npz_path_list, swinunetr_npz_path_list, ensemble_folder, one_image)
+        ensembled_pred_nii_path = met_ensembler(nnunet_npz_path_list, ensemble_folder, one_image)
 
         remove_disconnected_from_dir(ensemble_folder, maybe_make_dir(out_dir), CONSTANTS['remove_disconnected_factor'])
 
