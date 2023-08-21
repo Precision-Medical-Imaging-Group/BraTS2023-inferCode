@@ -28,7 +28,7 @@ CONSTANTS={
 
 def maybe_make_dir(path):
     os.makedirs(path, exist_ok=True)
-    return path
+    return Path(path)
 
 def infer_single(input_path, out_dir):
     """do inference on a single folder
@@ -64,6 +64,7 @@ def infer_single(input_path, out_dir):
         label_to_optimize= 'ed'
         pp_ed_out = maybe_make_dir(temp_dir/ 'pp{label_to_optimize}')
         postprocess_batch(pp_et_out,  pp_ed_out, label_to_optimize, ratio=CONSTANTS[f'{label_to_optimize}_ratio'], convert_to_brats_labels=False)
+        
         remove_dir(pp_ed_out, maybe_make_dir(out_dir), CONSTANTS['remove_dir_factor'])
 
 def setup_model_weights():
