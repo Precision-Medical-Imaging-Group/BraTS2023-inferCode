@@ -11,8 +11,8 @@ app = typer.Typer()
 def infer(
     data_path: str = typer.Option(..., "--data_path"),
     output_path: str = typer.Option(..., "--output_path"),
-    challenge: str = typer.Option(..., "--challenge"),
 ):
+    challenge = 'ped'
     
     if (challenge in ["ped", "PED", "BraTS2023-PED"]):
         from ped_runner import setup_model_weights, batch_processor

@@ -9,23 +9,14 @@ from ensembler.ensemble import men_ensembler
 from nnunet.runner import run_infer_nnunet
 from swinunetr.runner import run_infer_swinunetr
 from postproc.postprocess import remove_disconnected_from_dir
+from ped_runner import NAME_MAPPER, maybe_make_dir
 
-NAME_MAPPER ={
-    '-t1n.nii.gz': '_0000.nii.gz',
-    '-t1c.nii.gz': '_0001.nii.gz',
-    '-t2w.nii.gz': '_0002.nii.gz',
-    '-t2f.nii.gz': '_0003.nii.gz'
-}
 CONSTANTS={
     'nnunet_model_path':'./weights/BraTS2023_MEN_nnunetv2_model.zip',
     'swinunetr_model_path':'./weights/BraTS2023-MEN-Model-Swin.zip',
     'swinunetr_pt_path':'./BraTS2023-MEN-Model-Swin',
     'remove_disconnected_factor': 50,
 }
-
-def maybe_make_dir(path):
-    os.makedirs(path, exist_ok=True)
-    return path
 
 def infer_single(input_path, out_dir):
     """do inference on a single folder
