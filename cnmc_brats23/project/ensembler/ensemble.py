@@ -1,5 +1,6 @@
 import numpy as np
 import nibabel as nib
+from pathlib import Path
 
 def ped_ensembler(nnunet_et_npz_path_list, nnunet_tcwt_npz_path_list, swinunetr_npz_path_list, ensembled_path, input_img):
 
@@ -110,7 +111,7 @@ def met_ensembler(nnunet_npz_path_list, ensembled_path, input_img):
         ensembled_path.mkdir(parents=True)
     
     # ensemble nnunet
-    case = nnunet_npz_path_list[0].name.split('.npz')[0]
+    case = Path(nnunet_npz_path_list[0]).name.split('.npz')[0]
     print(f"Ensemble {case}")
     prob = np.load(nnunet_npz_path_list[0], allow_pickle=True)['probabilities']
     for i in range(1, len(nnunet_npz_path_list)):
@@ -140,4 +141,5 @@ def met_ensembler(nnunet_npz_path_list, ensembled_path, input_img):
     print(f"Seg: {seg.shape}")
     img = nib.load(input_img)
     nib.save(nib.Nifti1Image(seg_out.astype(np.int8), img.affine), ensembled_path / f"{case}.nii.gz")
+    print("Saving:", ensembled_path / f"{case}.nii.gz")
     return ensembled_path / f"{case}.nii.gz"

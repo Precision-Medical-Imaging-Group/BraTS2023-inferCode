@@ -12,8 +12,8 @@ def infer(
     data_path: str = typer.Option(..., "--data_path"),
     output_path: str = typer.Option(..., "--output_path"),
 ):
-    challenge = 'ped'
-    
+    challenge = 'met'
+    print(f"Doing Pred for {challenge} and storing to {output_path}")
     if (challenge in ["ped", "PED", "BraTS2023-PED"]):
         from ped_runner import setup_model_weights, batch_processor
     elif (challenge in ["men", "MEN", "BraTS2023-MEN"]):
