@@ -8,7 +8,7 @@ platform:
 
 docker:
   # Image name
-  image: docker.synapse.org/syn52117469/cnmc-peds:0.0.0
+  image: docker.synapse.org/syn52117469/cnmc-peds:ped
   # Docker build context relative to $MLCUBE_ROOT. Default is `build`.
   build_context: "../project"
   # Docker file name within docker build context, default is `Dockerfile`.
