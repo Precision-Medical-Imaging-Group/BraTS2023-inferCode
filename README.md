@@ -33,7 +33,7 @@ All trained model weights are accessible to authorized individuals here: [OneDri
 
 ## Contact Us
 
-For momre information about implementations and reusability, please contact 
+For more information about implementations and reusability, please contact 
 - Abhijeet Parida [pabhijeet@childrensnational.org](mailto:pabhijeet@childrensnational.org)
 - Daniel Capell&aacute;n [daniel.capellan@upm.es](mailto:daniel.capellan@upm.es)
 - Zhifan Jiang, Ph.D. [zjiang@childrensnational.org](mailto:zjiang@childrensnational.org)
