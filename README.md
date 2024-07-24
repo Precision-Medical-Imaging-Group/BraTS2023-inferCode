@@ -5,6 +5,7 @@ Our team achieved top rankings in the BraTS2023 challenge:
 - **1st place** in the PED task.
 - **3rd place** in the MEN task.
 - **4th place** in the MET task.
+
 [BraTS2023 final rankings](https://www.synapse.org/Synapse:syn51156910/wiki/627802) 
 
 ## Getting Started
